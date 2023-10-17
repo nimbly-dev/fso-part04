@@ -1,0 +1,10 @@
+POST http://localhost:3001/api/contacts/
+Content-type: application/json
+
+{
+    "name": "tes123t",
+    "number": "09-1234556"
+}
+
+###
+GET http://localhost:3001/api/contacts/
