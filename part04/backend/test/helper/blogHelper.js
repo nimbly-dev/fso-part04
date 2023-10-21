@@ -1,4 +1,7 @@
-const dummy = (blogs) => {
+const _ = require('lodash')
+
+
+const dummy = () => {
     // You can create an array of sample blogs here
     // const sampleBlogs = [
     //     {
@@ -20,11 +23,42 @@ const dummy = (blogs) => {
     // if (Array.isArray(blogs)) {
     //     return [...sampleBlogs, ...blogs]
     // }
-    
-    // Otherwise, return just the sample blogs
+
+    // Otherwise, return just the sample blogs\
     return 1
 }
 
+const totalLikes = (blogs) => {
+    return blogs.reduce((total, blog) => total + blog.likes, 0)
+}
+
+const findMostLikedBlog = (blogs) => {
+    if (blogs.length === 0) {
+        return null // Return null if the array is empty
+    }
+
+    const mostLikedBlog = blogs.reduce((mostLiked, blog) => (blog.likes > mostLiked.likes ? blog : mostLiked))
+
+    if (mostLikedBlog.likes === 0) {
+        return 0 // Return 0 if the most liked blog has 0 likes
+    }
+
+    return mostLikedBlog
+}
+const findAuthorWithMostBlogs=(blogs) => {
+    if (blogs.length === 0) {
+        return null // Return null if the array is empty
+    }
+
+    const authorCounts = _.countBy(blogs, 'author')
+    const authorWithMostBlogs = _.maxBy(_.keys(authorCounts), author => authorCounts[author])
+
+    return {
+        author: authorWithMostBlogs,
+        blogs: authorCounts[authorWithMostBlogs]
+    }
+}
+
 module.exports = {
-    dummy
+    dummy,totalLikes,findMostLikedBlog,findAuthorWithMostBlogs
 }
