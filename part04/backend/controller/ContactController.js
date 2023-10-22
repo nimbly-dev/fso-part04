@@ -44,7 +44,7 @@ contactRouter.post('/', async (request, response, next) => {
                     const newContact = new Contact({ name: body.name, number: body.number })
                     newContact.save()
                         .then((savedContact) => {
-                            response.json(savedContact)
+                            response.status(201).json(savedContact)
                         })
                         .catch((saveErr) => {
                             next(saveErr)
