@@ -1,6 +1,7 @@
 const contactRouter = require('express').Router()
 const Contact = require('../model/contact')
 const ApiResponse = require('../model/ApiResponse')
+const ErrorResponse = require('../model/ErrorResponse')
 const logger = require('../util/logger')
 
 contactRouter.get('/', (request, response) => {
@@ -38,7 +39,7 @@ contactRouter.post('/', async (request, response, next) => {
             .then((existingContact) => {
                 if (existingContact) {
                     // An existing contact with the same name was found
-                    return response.status(400).json(new ApiResponse(`An existing contact with the name ${body.name} was found.`))
+                    return response.status(400).json(new ErrorResponse(`An existing contact with the name ${body.name} was found.`))
                 } else {
                     // Create and save the new contact
                     const newContact = new Contact({ name: body.name, number: body.number })
@@ -57,18 +58,24 @@ contactRouter.post('/', async (request, response, next) => {
     }
 })
 
-contactRouter.put('/:id', (request, response, next) => {
+contactRouter.put('/:id', async (request, response, next) => {
     const { name, number } = request.body
 
-    Contact.findByIdAndUpdate(
-        request.params.id,
-        { name, number },
-        { new: true, runValidators: true, context: 'query' },
-    )
-        .then((updatedContact) => {
-            response.json(updatedContact)
-        })
-        .catch((error) => next(error))
+    try {
+        const updatedContact = await Contact.findByIdAndUpdate(
+            request.params.id,
+            { name, number },
+            { new: true, runValidators: false, context: 'query' }
+        )
+
+        if (!updatedContact) {
+            return response.status(404).json({ error: 'Provided id not found' }).end()
+        }
+
+        response.json(updatedContact)
+    } catch (error) {
+        next(error)
+    }
 })
 
 contactRouter.delete('/:id', (request, response, next) => {
