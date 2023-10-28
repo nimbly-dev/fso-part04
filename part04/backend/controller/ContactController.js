@@ -2,7 +2,6 @@ const contactRouter = require('express').Router()
 const Contact = require('../model/contact')
 const ApiResponse = require('../model/ApiResponse')
 const ErrorResponse = require('../model/ErrorResponse')
-const logger = require('../util/logger')
 
 contactRouter.get('/', (request, response) => {
     Contact.find({}).then((contacts) => {
@@ -34,48 +33,42 @@ contactRouter.post('/', async (request, response, next) => {
     console.log(request)
     const body = request.body
 
-    try {
-        await Contact.findOne({ name: body.name }, { runValidators: true }).exec()
-            .then((existingContact) => {
-                if (existingContact) {
-                    // An existing contact with the same name was found
-                    return response.status(400).json(new ErrorResponse(`An existing contact with the name ${body.name} was found.`))
-                } else {
-                    // Create and save the new contact
-                    const newContact = new Contact({ name: body.name, number: body.number })
-                    newContact.save()
-                        .then((savedContact) => {
-                            response.status(201).json(savedContact)
-                        })
-                        .catch((saveErr) => {
-                            next(saveErr)
-                        })
-                }
-            })
-            .catch((error) => next(error))
-    } catch (err) {
-        logger.error(err)
-    }
+    await Contact.findOne({ name: body.name }, { runValidators: true }).exec()
+        .then((existingContact) => {
+            if (existingContact) {
+                // An existing contact with the same name was found
+                return response.status(400).json(new ErrorResponse(`An existing contact with the name ${body.name} was found.`))
+            } else {
+                // Create and save the new contact
+                const newContact = new Contact({ name: body.name, number: body.number })
+                newContact.save()
+                    .then((savedContact) => {
+                        response.status(201).json(savedContact)
+                    })
+                    .catch((saveErr) => {
+                        next(saveErr)
+                    })
+            }
+        })
+        .catch((error) => next(error))
 })
 
-contactRouter.put('/:id', async (request, response, next) => {
+contactRouter.put('/:id', async (request, response) => {
     const { name, number } = request.body
 
-    try {
-        const updatedContact = await Contact.findByIdAndUpdate(
-            request.params.id,
-            { name, number },
-            { new: true, runValidators: false, context: 'query' }
-        )
 
-        if (!updatedContact) {
-            return response.status(404).json({ error: 'Provided id not found' }).end()
-        }
+    const updatedContact = await Contact.findByIdAndUpdate(
+        request.params.id,
+        { name, number },
+        { new: true, runValidators: false, context: 'query' }
+    )
 
-        response.json(updatedContact)
-    } catch (error) {
-        next(error)
+    if (!updatedContact) {
+        return response.status(404).json({ error: 'Provided id not found' }).end()
     }
+
+    response.json(updatedContact)
+
 })
 
 contactRouter.delete('/:id', (request, response, next) => {

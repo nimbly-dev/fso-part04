@@ -1,5 +1,6 @@
 //Dependency Imports Here
 const express = require('express')
+require('express-async-errors')
 const logger = require('./util/logger')
 const contactRouter = require('./controller/ContactController')
 const blogRouter = require('./controller/BlogListController')

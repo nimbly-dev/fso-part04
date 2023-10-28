@@ -8,11 +8,15 @@ const Contact = require('../model/contact')
 
 
 beforeEach(async () => {
+    console.log('cleared')
     await Contact.deleteMany({})
-    let contactObj = new Contact(phonebookHelper.initialContacts[0])
-    await contactObj.save()
-    contactObj = new Contact(phonebookHelper.initialContacts[1])
-    await contactObj.save()
+
+    const contactsObj = phonebookHelper.initialContacts
+        .map(contact => new Contact(contact))
+    const initialContactsArray = contactsObj.map(contact => contact.save())
+
+    await Promise.all(initialContactsArray)
+    console.log('done')
 })
 
 
@@ -206,7 +210,7 @@ describe('delete', () => {
         expect(response.status).toBe(204)
     })
     test('a nonexisting contact', async() => {
-        const savedContactId = '652aa64a387430472b7dc502'
+        const savedContactId = await phonebookHelper.nonExistingId()
 
         const response = await api
             .delete(`/api/contacts/${savedContactId}`)
