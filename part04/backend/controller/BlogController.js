@@ -31,4 +31,24 @@ blogRouter.post('/', (request, response) => {
     }
 })
 
+blogRouter.delete('/:id', (request,response,next) => {
+    const id = Number(request.params.id)
+
+    if (id === null) {
+        return response.status(404).json({
+            error: 'Id param must not be empty',
+        })
+    }
+
+    Blog.findByIdAndRemove(request.params.id)
+        .then((result) => {
+            if (!result) {
+                response.status(404).end()
+            } else {
+                response.status(204).json(new ApiResponse('Deleted')).end()
+            }
+        })
+        .catch((error) => next(error))
+})
+
 module.exports = blogRouter

@@ -139,7 +139,36 @@ describe('save', () => {
     })
 })
 
+describe('delete',() => {
+    test('a blog', async () => {
+        const newBlog =     {
+            title: 'New Blog',
+            author: 'Theo',
+            url: 'https://google.com/',
+            likes: 4,
+            __v: 0
+        }
 
+        const blog = await api
+            .post('/api/blogs')
+            .send(newBlog)
+        const id = blog.body.data.id
+
+
+        const response = await api
+            .delete(`/api/blogs/${id}`)
+
+        expect(response.status).toBe(204)
+    })
+    test('a nonexisting blog', async()=>{
+        const savedContactId = await blogHelper.nonExistingId()
+
+        const response = await api
+            .delete(`/api/contacts/${savedContactId}`)
+
+        expect(response.status).toBe(404)
+    })
+})
 
 
 afterAll(async () => {
