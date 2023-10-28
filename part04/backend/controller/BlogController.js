@@ -31,6 +31,24 @@ blogRouter.post('/', (request, response) => {
     }
 })
 
+blogRouter.put('/:id', async (request, response) => {
+    const { title, url, author } = request.body
+
+
+    const updatedBlog = await Blog.findByIdAndUpdate(
+        request.params.id,
+        { title, url, author },
+        { new: true, runValidators: false, context: 'query' }
+    )
+
+    if (!updatedBlog) {
+        return response.status(404).json({ error: 'Provided id not found' }).end()
+    }
+
+    response.json(updatedBlog)
+
+})
+
 blogRouter.delete('/:id', (request,response,next) => {
     const id = Number(request.params.id)
 

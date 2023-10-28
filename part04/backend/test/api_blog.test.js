@@ -139,6 +139,59 @@ describe('save', () => {
     })
 })
 
+describe('update', () => {
+    test('a blog', async () => {
+        const newBlog =     {
+            title: 'New Blog',
+            author: 'Theo',
+            url: 'https://google.com/',
+            likes: 4,
+            __v: 0
+        }
+
+        const blogToBeUpdated = await api
+            .post('/api/blogs')
+            .send(newBlog)
+        const blogId = blogToBeUpdated.body.data.id
+        const newBlogTitle = 'new Blog 2'
+        const newBlogAuthor = 'Theo2'
+        const newBlogUrl = 'https://youtube.com'
+
+        const updateBlog = {
+            title: newBlogTitle,
+            author: newBlogAuthor,
+            url: newBlogUrl,
+        }
+
+        const updatedContact = await api
+            .put(`/api/blogs/${blogId}`)
+            .send(updateBlog)
+
+        expect(updatedContact.status).toBe(200)
+        expect(updatedContact.body.title).toContain(newBlogTitle)
+    })
+
+    test('a nonexisting contact', async () => {
+
+        const newBlog =     {
+            title: 'New Blog',
+            author: 'Theo',
+            url: 'https://google.com/',
+            likes: 4,
+            __v: 0
+        }
+
+        const response = await api
+            .put('/api/contacts/652aa64a387430472b7dc50c')
+            .send(newBlog)
+
+        const expectedErrorMssg = 'Provided id not found'
+
+        expect(response.status).toBe(404)
+        expect(response.body.error).toContain(expectedErrorMssg)
+    })
+})
+
 describe('delete',() => {
     test('a blog', async () => {
         const newBlog =     {
@@ -160,7 +213,7 @@ describe('delete',() => {
 
         expect(response.status).toBe(204)
     })
-    test('a nonexisting blog', async()=>{
+    test('a nonexisting blog', async() => {
         const savedContactId = await blogHelper.nonExistingId()
 
         const response = await api
