@@ -4,7 +4,7 @@ const phonebookHelper = require('./helper/phonebookHelper')
 const app = require('../app')
 
 const api = supertest(app)
-const Contact = require('../model/contact')
+const Contact = require('../model/Contact')
 
 
 beforeEach(async () => {

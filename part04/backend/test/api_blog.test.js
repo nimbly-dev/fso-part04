@@ -5,7 +5,25 @@ const app = require('../app')
 
 const api = supertest(app)
 const Blog = require('../model/Blog')
+const User = require('../model/User')
 
+global.authToken = null // Initialize the global variable
+
+beforeAll(async() => {
+    console.log('Creating test account')
+    await User.deleteMany({})
+
+    //Create a test user
+    const userObj = { username: 'api_blog_test_user', name: 'testName', password: 'test' }
+    const response = await api.post('/api/users')
+        .send(userObj)
+
+    //Login the test user
+    const loginUser = { username: response.body.username, password: 'test' }
+    const loginResponse = await api.post('/api/login')
+        .send(loginUser)
+    global.authToken = loginResponse.body.token
+},15000)
 
 beforeEach(async () => {
     console.log('cleared')
@@ -25,19 +43,20 @@ describe('get', () => {
     test('contacts are returned as json', async () => {
         await api
             .get('/api/blogs')
+            .set('Authorization', `Bearer ${global.authToken}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
     })
 
     test('all blogs are returned', async () => {
-        const response = await api.get('/api/blogs')
+        const response = await api.get('/api/blogs').set('Authorization', `Bearer ${global.authToken}`)
 
         expect(response.body.data).toHaveLength(blogHelper.initialBlogs.length)
     })
 
 
     test('a specific blog is within the returned contact', async () => {
-        const response = await api.get('/api/blogs')
+        const response = await api.get('/api/blogs').set('Authorization', `Bearer ${global.authToken}`)
 
 
         const author = response.body.data.map(r => r.author)
@@ -47,7 +66,7 @@ describe('get', () => {
     })
 
     test('a id of the blog', async () => {
-        const response = await api.get('/api/blogs')
+        const response = await api.get('/api/blogs').set('Authorization', `Bearer ${global.authToken}`)
 
         const blogs = response.body.data
         expect(blogs[0].id).toBeDefined()
@@ -67,6 +86,7 @@ describe('save', () => {
 
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${global.authToken}`)
             .send(newBlog)
             .expect(201)
             .expect('Content-Type', /application\/json/)
@@ -89,6 +109,7 @@ describe('save', () => {
 
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${global.authToken}`)
             .send(newBlog)
             .expect(201)
             .expect('Content-Type', /application\/json/)
@@ -115,6 +136,7 @@ describe('save', () => {
         const expectedErrorMssg = 'URL must not be empty'
         const response = await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${global.authToken}`)
             .send(newBlog)
 
         expect(response.status).toBe(400)
@@ -132,6 +154,7 @@ describe('save', () => {
         const expectedErrorMssg = 'Title must not be empty'
         const response = await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${global.authToken}`)
             .send(newBlog)
 
         expect(response.status).toBe(400)
@@ -151,6 +174,7 @@ describe('update', () => {
 
         const blogToBeUpdated = await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${global.authToken}`)
             .send(newBlog)
         const blogId = blogToBeUpdated.body.data.id
         const newBlogTitle = 'new Blog 2'
@@ -165,6 +189,7 @@ describe('update', () => {
 
         const updatedContact = await api
             .put(`/api/blogs/${blogId}`)
+            .set('Authorization', `Bearer ${global.authToken}`)
             .send(updateBlog)
 
         expect(updatedContact.status).toBe(200)
@@ -183,6 +208,7 @@ describe('update', () => {
 
         const response = await api
             .put('/api/contacts/652aa64a387430472b7dc50c')
+            .set('Authorization', `Bearer ${global.authToken}`)
             .send(newBlog)
 
         const expectedErrorMssg = 'Provided id not found'
@@ -204,12 +230,14 @@ describe('delete',() => {
 
         const blog = await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${global.authToken}`)
             .send(newBlog)
         const id = blog.body.data.id
 
 
         const response = await api
             .delete(`/api/blogs/${id}`)
+            .set('Authorization', `Bearer ${global.authToken}`)
 
         expect(response.status).toBe(204)
     })
@@ -218,6 +246,7 @@ describe('delete',() => {
 
         const response = await api
             .delete(`/api/contacts/${savedContactId}`)
+            .set('Authorization', `Bearer ${global.authToken}`)
 
         expect(response.status).toBe(404)
     })

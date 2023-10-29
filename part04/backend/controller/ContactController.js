@@ -1,5 +1,5 @@
 const contactRouter = require('express').Router()
-const Contact = require('../model/contact')
+const Contact = require('../model/Contact')
 const ApiResponse = require('../model/ApiResponse')
 const ErrorResponse = require('../model/ErrorResponse')
 
