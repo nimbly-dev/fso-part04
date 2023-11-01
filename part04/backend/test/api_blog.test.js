@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const blogHelper = require('./helper/blogHelper')
+const jwt = require('jsonwebtoken')
 const app = require('../app')
 
 const api = supertest(app)
@@ -8,7 +9,7 @@ const Blog = require('../model/Blog')
 const User = require('../model/User')
 
 global.authToken = null // Initialize the global variable
-
+global.testUserId = null
 beforeAll(async() => {
     console.log('Creating test account')
     await User.deleteMany({})
@@ -18,29 +19,46 @@ beforeAll(async() => {
     const response = await api.post('/api/users')
         .send(userObj)
 
-    //Login the test user
+    //Login the test users
     const loginUser = { username: response.body.username, password: 'test' }
     const loginResponse = await api.post('/api/login')
         .send(loginUser)
+
     global.authToken = loginResponse.body.token
+    global.testUserId = (jwt.verify(loginResponse.body.token, process.env.SECRET)).id
 },15000)
 
 beforeEach(async () => {
     console.log('cleared')
     await Blog.deleteMany({})
-
+    const testUser =  await User.findById(global.testUserId)
+    const { id } = testUser
     const blogObj = blogHelper.initialBlogs
-        .map(blog => new Blog(blog))
-    const initialBlogsArray = blogObj.map(blog => blog.save())
-
-    await Promise.all(initialBlogsArray)
+        .map(blog => ({
+            ...blog,
+            'user': id,
+        }))
+    Blog.insertMany(blogObj)
     console.log('done')
-},10000)
+},15000)
 
+beforeEach(async () => {
+    console.log('cleared')
+    await Blog.deleteMany({})
+    const testUser =  await User.findById(global.testUserId)
+    const { id } = testUser
+    const blogObj = blogHelper.initialBlogs
+        .map(blog => ({
+            ...blog,
+            'user': id,
+        }))
+    Blog.insertMany(blogObj)
+    console.log('done')
+},15000)
 
 describe('get', () => {
 
-    test('contacts are returned as json', async () => {
+    test('blogs are returned as json', async () => {
         await api
             .get('/api/blogs')
             .set('Authorization', `Bearer ${global.authToken}`)
@@ -249,6 +267,42 @@ describe('delete',() => {
             .set('Authorization', `Bearer ${global.authToken}`)
 
         expect(response.status).toBe(404)
+    })
+    test('a blog where a user has no access', async() => {
+        //Create the user with no access
+        const userObj2 = { username: 'api_blog_test_user_2', name: 'testName', password: 'test' }
+        const response2 = await api.post('/api/users')
+            .send(userObj2)
+
+        //Get its token
+        const loginUser = { username: response2.body.username, password: 'test' }
+        const loginResponse = await api.post('/api/login')
+            .send(loginUser)
+        const token = loginResponse.body.token
+
+        //Save the blog:
+        const newBlog =     {
+            title: 'New Blog',
+            author: 'Theo',
+            url: 'https://google.com/',
+            likes: 4,
+            __v: 0
+        }
+
+        const blog = await api
+            .post('/api/blogs')
+            .set('Authorization', `Bearer ${global.authToken}`)
+            .send(newBlog)
+        const id = blog.body.data.id
+
+        //Delete it using a different token
+        const response = await api
+            .delete(`/api/blogs/${id}`)
+            .set('Authorization', `Bearer ${token}`)
+        const expectedErrorMssg = 'Unauthorized'
+
+        expect(response.status).toBe(401)
+        expect(response.body.error).toContain(expectedErrorMssg)
     })
 })
 

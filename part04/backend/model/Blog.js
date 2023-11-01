@@ -21,7 +21,8 @@ const blogSchema = new mongoose.Schema({
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        require: true,
     }
 })
 
@@ -31,6 +32,28 @@ blogSchema.set('toJSON', {
         delete returnedObject._id
         delete returnedObject.__v
     }
+})
+
+blogSchema.pre('remove', function (next) {
+    const User = require('../model/User') // Adjust the import path as needed
+
+    // Find the user associated with this blog
+    User.findById(this.user, (err, user) => {
+        if (err) {
+            return next(err)
+        }
+
+        // Remove the blog's reference from the user's blogs array
+        user.blogs = user.blogs.filter((blogId) => blogId.toString() !== this._id.toString())
+
+        // Save the updated user
+        user.save((err) => {
+            if (err) {
+                return next(err)
+            }
+            next()
+        })
+    })
 })
 
 module.exports = mongoose.model('Blog', blogSchema)
