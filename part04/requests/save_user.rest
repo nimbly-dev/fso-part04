@@ -1,0 +1,10 @@
+
+POST http://localhost:3001/api/users/
+Content-type: application/json
+
+{
+    "username": "root12345",
+    "name": "Superuseraa",
+    "password": "Password123!"
+}
+

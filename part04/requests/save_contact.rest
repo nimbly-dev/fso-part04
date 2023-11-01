@@ -2,9 +2,10 @@ POST http://localhost:3001/api/contacts/
 Content-type: application/json
 
 {
-    "name": "te",
-    "number": "09-1234556"
+    "name": "test12a3",
+    "number": "09-1234556",
+    
 }
 
 ###
-GET http://localhost:3001/api/contacts/
+GET http://localhost:3001/api/users/

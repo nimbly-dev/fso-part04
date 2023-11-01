@@ -1,0 +1,7 @@
+DELETE http://localhost:3001/api/blogs/653f84ccfe1b0bcd5a968560
+Content-type: application/json
+Authorization: Bearer 
+
+###
+GET http://localhost:3001/api/blogs/
+Authorization: Bearer 

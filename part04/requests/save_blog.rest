@@ -1,14 +1,18 @@
 
 POST http://localhost:3001/api/blogs/
 Content-type: application/json
+Authorization: Bearer 
+
 
 {
-    "title": "test",
+    "title": "tes11t",
     "author": "09-1234556",
     "url": "123",
-    "likes": 1
+    "likes": 1,
+    "userId": "653dd1a18d43ff636afa6f09"
 }
 
 
 ###
 GET http://localhost:3001/api/blogs/
+Authorization: Bearer 
